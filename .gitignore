@@ -1,0 +1,23 @@
+# Secrets and environment variables
+.env
+
+# SQLite Database
+*.db
+*.sqlite
+*.sqlite3
+santa.db
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
