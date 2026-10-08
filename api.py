@@ -46,12 +46,13 @@ class UpdateWishlistRequest(BaseModel):
 class StartLotteryRequest(BaseModel):
     user_id: int
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def serve_index():
     index_file = static_dir / "index.html"
     if index_file.exists():
         return FileResponse(index_file)
     return {"message": "Secret Santa API is running. Place index.html in static/"}
+
 
 @app.get("/api/config")
 async def get_config():
