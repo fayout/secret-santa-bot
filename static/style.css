@@ -137,44 +137,6 @@ body {
   color: var(--text-muted);
 }
 
-/* DEV SWITCHER */
-.dev-switcher {
-  background: #111a2e;
-  border-bottom: 1px solid rgba(244, 162, 97, 0.3);
-  padding: 10px 16px;
-  font-size: 12px;
-}
-
-.dev-title {
-  color: var(--accent-gold);
-  margin-bottom: 6px;
-  font-weight: 600;
-}
-
-.dev-buttons {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.dev-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--surface-card-border);
-  color: #fff;
-  padding: 4px 10px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
-}
-
-.dev-btn.active {
-  background: var(--accent-gold);
-  color: #111;
-  font-weight: 700;
-  border-color: var(--accent-gold);
-}
-
 /* VIEWS & CARDS */
 .view {
   display: none;

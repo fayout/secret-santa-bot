@@ -3,12 +3,8 @@
 const tg = window.Telegram?.WebApp;
 
 // Current state
-let currentUser = {
-  user_id: 101,
-  first_name: "Иван (Админ)",
-  last_name: "",
-  username: "ivan_santa"
-};
+let currentUser = null;
+
 
 let currentRoom = null;
 let botConfig = { bot_username: "SecretSantaBot", webapp_url: window.location.origin };
@@ -154,54 +150,75 @@ function updateUserBadge() {
   }
 }
 
-// Setup User Detection (Telegram or Browser)
+// Setup User Detection (Real Telegram WebApp or browser fallback)
 function setupUser() {
-  const devSwitcher = document.getElementById("dev-switcher");
-  
-  if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    const tu = tg.initDataUnsafe.user;
+  if (tg) {
+    tg.ready?.();
+    tg.expand?.();
+  }
+
+  let tu = null;
+
+  // 1. Primary: Telegram WebApp initDataUnsafe.user
+  if (tg?.initDataUnsafe?.user?.id) {
+    tu = tg.initDataUnsafe.user;
+  }
+
+  // 2. Secondary: Parse tg.initData string
+  if (!tu && tg?.initData) {
+    try {
+      const sp = new URLSearchParams(tg.initData);
+      const userStr = sp.get("user");
+      if (userStr) tu = JSON.parse(userStr);
+    } catch (e) {
+      console.warn("Could not parse tg.initData:", e);
+    }
+  }
+
+  // 3. Tertiary: Check window.location.hash for tgWebAppData
+  if (!tu && window.location.hash) {
+    try {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const tgData = hashParams.get("tgWebAppData");
+      if (tgData) {
+        const subParams = new URLSearchParams(tgData);
+        const userStr = subParams.get("user");
+        if (userStr) tu = JSON.parse(userStr);
+      }
+    } catch (e) {
+      console.warn("Could not parse tgWebAppData:", e);
+    }
+  }
+
+  // If detected real Telegram user
+  if (tu && tu.id) {
     currentUser = {
       user_id: tu.id,
       first_name: tu.first_name || "Участник",
       last_name: tu.last_name || "",
       username: tu.username || ""
     };
-    tg.ready();
-    tg.expand?.();
-    if (devSwitcher) devSwitcher.classList.add("hidden");
   } else {
-    // Browser mode: show switcher
-    if (devSwitcher) devSwitcher.classList.remove("hidden");
-    setupDevSwitcher();
+    // Standalone browser fallback: persistent user in localStorage
+    let savedId = localStorage.getItem("santa_browser_uid");
+    let savedName = localStorage.getItem("santa_browser_name");
+    if (!savedId) {
+      savedId = String(Math.floor(100000 + Math.random() * 900000));
+      savedName = "Пользователь";
+      localStorage.setItem("santa_browser_uid", savedId);
+      localStorage.setItem("santa_browser_name", savedName);
+    }
+    currentUser = {
+      user_id: parseInt(savedId, 10),
+      first_name: savedName,
+      last_name: "",
+      username: ""
+    };
   }
+
   syncUser();
 }
 
-function setupDevSwitcher() {
-  const buttons = document.querySelectorAll(".dev-btn");
-  buttons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      buttons.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
-      currentUser = {
-        user_id: parseInt(btn.dataset.id, 10),
-        first_name: btn.dataset.name,
-        last_name: "",
-        username: btn.dataset.username
-      };
-      triggerHaptic();
-      syncUser();
-      showToast(`Переключено на: ${currentUser.first_name}`, "info");
-
-      // Refresh current view
-      if (currentRoom) {
-        loadRoom(currentRoom.code);
-      } else {
-        loadMyRooms();
-      }
-    });
-  });
-}
 
 // Load user's rooms
 async function loadMyRooms() {
